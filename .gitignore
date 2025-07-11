@@ -1,0 +1,4 @@
+scripts
+dist
+build
+src/*.egg-info/
