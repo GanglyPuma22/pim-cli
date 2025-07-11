@@ -1,4 +1,10 @@
+# Ignore custom scripts used for development
 scripts
+
+# Ignore directories related to Python packaging
 dist
 build
 src/*.egg-info/
+
+#Ignore potential remnants of testing installs here
+models

@@ -1,3 +1,11 @@
-models:
+huggingface:
   - distilbert-base-uncased
+#  - mistralai/Mistral-7B-Instruct-v0.1
+
+torchvision:
   - resnet18
+  - mobilenet_v2
+  
+# sklearn:
+#  - ./models/spam-detector.pkl
+#  - ./models/linear-regression.pkl
