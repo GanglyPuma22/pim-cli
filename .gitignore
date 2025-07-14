@@ -8,3 +8,6 @@ src/*.egg-info/
 
 #Ignore potential remnants of testing installs here
 models
+
+# Ignore Python cache files
+*__pycache__*
