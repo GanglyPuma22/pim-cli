@@ -1,7 +1,8 @@
 import logging
 from pathlib import Path
 from .base import BaseCommand
-from ..util.pimfile_parser import load_pimfile
+from ..util.model_parsing import parse_pimfile
+
 
 class ListCommand(BaseCommand):
     name = "list"
@@ -9,10 +10,10 @@ class ListCommand(BaseCommand):
 
     def add_arguments(self) -> None:
         self.parser.add_argument(
-            "-f", 
-            "--file", 
-            default="Pimfile", 
-            help="Path to the Pimfile (default: ./Pimfile)"
+            "-f",
+            "--file",
+            default="Pimfile",
+            help="Path to the Pimfile (default: ./Pimfile)",
         )
 
     def run(self, args) -> int:

@@ -11,3 +11,6 @@ models
 
 # Ignore Python cache files
 *__pycache__*
+
+# For Visual Studio Code
+.vscode/

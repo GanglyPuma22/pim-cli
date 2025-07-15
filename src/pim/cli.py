@@ -5,7 +5,7 @@ from pathlib import Path
 from huggingface_hub import snapshot_download
 
 # Import the pimfile parser
-from pim.util.pimfile_parser import load_pimfile
+from pim.util.model_parsing import parse_pimfile
 
 # --- Installation Functions ---
 
@@ -62,7 +62,7 @@ def run_install(args):
             logging.info(f"Using default global directory: {install_root}")
 
         logging.info(f"Installing models from {pimfile_path.resolve()}...")
-        models_to_install = load_pimfile(pimfile_path)
+        models_to_install = parse_pimfile(pimfile_path)
         
         # The directory where downloaded models (e.g., from Hugging Face) will be stored.
         models_dir = install_root / "models"
@@ -93,7 +93,7 @@ def run_list(args):
     try:
         pimfile_path = Path(args.file)
         print(f"Models declared in {pimfile_path.resolve()}:\n")
-        models_to_list = load_pimfile(pimfile_path)
+        models_to_list = parse_pimfile(pimfile_path)
 
         for framework, models in models_to_list.items():
             print(f"  {framework}:")
