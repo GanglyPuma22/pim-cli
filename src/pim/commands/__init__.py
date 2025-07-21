@@ -1,4 +1,4 @@
-from .install import InstallCommand
-from .list import ListCommand
+from pim.commands.install import InstallCommand
+from pim.commands.list import ListCommand
 
-__all__ = ['InstallCommand', 'ListCommand']
+__all__ = ["InstallCommand", "ListCommand"]

@@ -1,11 +1,29 @@
-huggingface:
-  - distilbert-base-uncased
-#  - mistralai/Mistral-7B-Instruct-v0.1
+#If no env name is specified, use the default one (name of env defined in config)
 
-torchvision:
+huggingface:
+  - name: openai/whisper-large
+    dependencies:
+      - torchaudio
+
+  - name: CompVis/stable-diffusion-v1-4
+    dependencies:
+      - diffusers
+      - accelerate
+      - safetensors
+
+
+torch:
   - resnet18
-  - mobilenet_v2
-  
-# sklearn:
-#  - ./models/spam-detector.pkl
-#  - ./models/linear-regression.pkl
+
+openai:
+  - whisper:
+      version: base
+      dependencies:
+        - ffmpeg
+        - torchaudio
+        - pip :
+            - transformers
+    
+
+custom:
+  - my_model.pt

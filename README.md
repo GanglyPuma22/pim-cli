@@ -37,7 +37,7 @@ Pim doesn’t replace tools like pip or conda — it **complements them** by han
 pip install pim-cli
 ```
 
-## 📦 `pim install` – Usage & Cache Behavior
+## 📦 `pim install` – Usage
 
 The `pim install` command is used to install one or more AI models listed in your `Pimfile`, or provided directly via CLI.
 
@@ -50,10 +50,10 @@ pim install
 
 Install specific models by name (framework prefix required) or from a custom Pimfile: 
 ```bash
-pim install hf:bert-base-uncased torch:resnet18 --file ./configs/my_Pimfile
+pim install huggingface:bert-base-uncased torch:resnet18 --file ./configs/my_Pimfile
 ```
 
-### 🗃 Cache Directory Behavior
+## 🗃 Cache Directory Behavior
 By default, Pim stores downloaded models in a cache directory. This allows models to be reused across sessions and avoids re-downloading.
 
 Pim resolves the cache directory using the following priority:
@@ -89,6 +89,76 @@ Instead of locking users into one model hub, **`pim` supports models from multip
 - Keeping installation declarative via the `Pimfile`
 
 This multi-framework philosophy ensures `pim` stays flexible, forward-compatible, and useful in both research and production workflows.
+
+## ⚠️ Conda Terms of Service (ToS) Notice
+
+When using this tool to create Conda environments, you may encounter the following error in non-interactive sessions (e.g., scripts or Python subprocesses):
+
+```
+CondaToSNonInteractiveError: Terms of Service have not been accepted for the following channels:
+    • https://repo.anaconda.com/pkgs/main
+    • https://repo.anaconda.com/pkgs/r
+```
+
+This occurs because Conda now requires explicit acceptance of the Terms of Service for certain Anaconda-hosted channels — and **non-interactive commands cannot prompt you to accept them**.
+
+### ✅ One-Time Fix
+
+To accept the Terms of Service and avoid this issue, run the following **in your terminal**:
+
+```bash
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
+```
+
+After doing this, your environment creation and package installation will proceed normally, even from within scripts or Python tooling. Certain packages might need to be installed by the **conda-forge channel**, see section below.
+
+---
+
+## 📦 Using `conda-forge` with Conda
+
+### 🧭 What Are Conda Channels?
+
+Conda channels are **repositories of packages**. When you run `conda install`, it looks through the list of channels (in order) to find and install packages.
+
+Each channel is like a separate package registry — **not all channels are equally maintained or up to date.**
+
+---
+
+### ✅ Why Use `conda-forge`?
+
+`conda-forge` is often **the best all-purpose choice** because:
+
+| Benefit               | Details |
+|------------------------|---------|
+| ✅ More packages        | It has **more ML/DL packages** than defaults |
+| ✅ More up-to-date     | Updated daily by the community |
+| ✅ More consistency    | Built with shared toolchains for cross-package compatibility |
+| ✅ Cross-platform      | Works better on ARM, M1, etc. |
+| ✅ Exclusive packages  | Some tools like `safetensors` are **only on conda-forge** |
+
+---
+
+### ⚙️ How to Use `conda-forge`
+
+```bash
+conda config --add channels conda-forge
+conda config --set channel_priority strict
+```
+---
+
+### 🔍 Finding Channels for Packages
+
+Use the Anaconda search tool or `conda search`:
+
+```bash
+conda search -c conda-forge transformers
+conda search -c defaults numpy
+```
+
+Or go to: https://anaconda.org
+
+---
 
 ## License
 

@@ -4,13 +4,18 @@ import logging
 import argparse
 from pim.commands.install import InstallCommand
 from pim.commands.list import ListCommand
+from pim.util.logging_filter import RelativePathFilter
 
 
 def main():
+    # The format string now uses %(relpath)s, which is added by our custom filter.
+    log_format = "[%(levelname)s:%(relpath)s:%(lineno)d] %(message)s"
     logging.basicConfig(
         level=logging.INFO,
-        format="%(levelname)s: %(message)s",
+        format=log_format,
     )
+    # Add the custom filter to the root logger to create the relative path
+    logging.getLogger().addFilter(RelativePathFilter())
 
     commands = {"install": InstallCommand(), "list": ListCommand()}
 
