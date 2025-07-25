@@ -4,7 +4,7 @@ import logging
 import argparse
 from pim.commands.install import InstallCommand
 from pim.commands.list import ListCommand
-from pim.util.logging_filter import RelativePathFilter
+from pim.utils.logging_filter import RelativePathFilter
 
 
 def main():

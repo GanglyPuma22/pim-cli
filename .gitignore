@@ -14,3 +14,6 @@ models
 
 # For Visual Studio Code
 .vscode/
+
+#For custom Pimfiles
+Pimfiles/

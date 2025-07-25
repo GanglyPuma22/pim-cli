@@ -1,7 +1,6 @@
 import logging
 from pathlib import Path
 from pim.commands.base import BaseCommand
-from pim.util.model_parsing import parse_pimfile
 
 
 class ListCommand(BaseCommand):

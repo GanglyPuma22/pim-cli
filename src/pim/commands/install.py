@@ -6,17 +6,17 @@ import subprocess
 
 from pim.config.settings import DEFAULT_CONDA_ENV_NAME, DEFAULT_PYTHON_VERSION
 from pim.commands.base import BaseCommand
-from pim.util.conda import (
+from pim.utils.conda import (
     conda_env_exists,
     create_conda_env,
     install_dependencies_in_env,
 )
-from pim.util.model_parsing import (
+from pim.commands.utils.install_utils import (
     combine_parsed_dicts,
     parse_models_list,
     parse_pimfile,
 )
-from pim.util.pathing import find_pimfile, validate_cache_path, validate_file_path
+from pim.utils.pathing import find_pimfile, validate_cache_path, validate_file_path
 
 
 class InstallCommand(BaseCommand):
@@ -67,8 +67,8 @@ class InstallCommand(BaseCommand):
     def run(self, args) -> int:
         try:
             cache_dir = validate_cache_path(args.cache_dir)
-            models_from_pimfile = None
-            models_from_user_args = None
+            model_data_from_pimfile = None
+            model_data_from_user_args = None
             # Check if models list is empty
             if not args.models or args.file:
                 pimfile_path = (
@@ -80,15 +80,16 @@ class InstallCommand(BaseCommand):
                     f"Installing models and dependencies from {pimfile_path} and saving to {cache_dir}"
                 )
                 # TODO Update parser to handle dependencies too and python version
-                models_from_pimfile = parse_pimfile(pimfile_path)
+                model_data_from_pimfile = parse_pimfile(pimfile_path)
 
             if args.models:
                 logging.debug(f"Models requested at CLI: {args.models}")
-                models_from_user_args = parse_models_list(args.models)
+                model_data_from_user_args = parse_models_list(args.models)
 
+            # TODO Document struct more clearly
             # Combine models into one dict
-            models_to_install = combine_parsed_dicts(
-                models_from_pimfile, models_from_user_args
+            combined_model_data = combine_parsed_dicts(
+                model_data_from_pimfile, model_data_from_user_args
             )
 
             # TODO decide if we want to combine models into one dict -> Initial thought no if dependencies arent provided in cli but can be in Pimfile
@@ -97,8 +98,8 @@ class InstallCommand(BaseCommand):
                 # TODO Handle isolated environments
             else:
                 base_conda_env_name = DEFAULT_CONDA_ENV_NAME
-                if "env-name" in models_to_install:
-                    base_conda_env_name = models_to_install["env-name"]
+                if "env-name" in combined_model_data:
+                    base_conda_env_name = combined_model_data["env-name"]
 
                 logging.info(
                     f"Using {base_conda_env_name} conda environment for all models provided, this will install all dependencies in the same environment"
@@ -118,15 +119,15 @@ class InstallCommand(BaseCommand):
 
                 install_dependencies_in_env(
                     base_conda_env_name,
-                    models_to_install.get("conda-dependencies", None),
-                    models_to_install.get("pip-dependencies", None),
+                    combined_model_data.get("conda-dependencies", None),
+                    combined_model_data.get("pip-dependencies", None),
                 )
 
-                # install_models()
-                # for framework, model_data in models_to_install.items():
+                # install_models(combined_model_data, cache_dir, args.auth)
+                # for framework, model_data in combined_model_data.items():
 
             # # Install models and dependencies
-            # for framework, models in models_from_pimfile.items():
+            # for framework, models in model_data_from_pimfile.items():
             #     for model in models:
             #         if framework == "huggingface":
             #             install_huggingface(model, cache_dir, use_auth=args.auth)

@@ -2,6 +2,7 @@ import yaml
 from pathlib import Path
 from pim.config.settings import DEFAULT_CONDA_ENV_NAME, SUPPORTED_FRAMEWORKS
 import logging
+import re
 
 
 def initialize_parsed_dict():
@@ -87,6 +88,10 @@ def parse_pimfile(pimfile_path):
 
             parsed["conda-dependencies"] = conda_depencies
             parsed["pip-dependencies"] = pip_dependencies
+            # Warning for potential conflicts
+            check_dependency_conflicts(
+                parsed["conda-dependencies"], parsed["pip-dependencies"]
+            )
             return parsed
     except Exception as e:
         logging.error(f"Error parsing Pimfile: {e}")
@@ -117,3 +122,73 @@ def parse_models_list(models_list):
         parsed[framework].append(model_name.strip())
 
     return parsed
+
+
+def check_dependency_conflicts(conda_deps, pip_deps):
+    """
+    Check for conflicts between conda and pip dependencies.
+    If a dependency is found in both lists, log a warning.
+    """
+
+    normalized_conda_deps = [dep.replace("==", "=") for dep in conda_deps]
+    normalized_pip_deps = [dep.replace("==", "=") for dep in pip_deps]
+
+    conda_set = set(normalized_conda_deps)
+    pip_set = set(normalized_pip_deps)
+
+    conflicts = conda_set.intersection(pip_set)
+    if conflicts:
+        logging.warning(
+            f"Conflicting dependencies found between conda and pip for the following packages: {', '.join([split_dep_first_version(dep)[0] for dep in conflicts])}"
+        )
+
+    split_deps = [
+        split_dep_first_version(dep)
+        for dep in normalized_conda_deps + normalized_pip_deps
+    ]
+    unique_deps = set(dep[0] for dep in split_deps)
+    if len(unique_deps) < len(split_deps):
+        duplicate_deps = set(split_deps) - unique_deps
+        logging.warning(  # TODO THIS PRINTS OFF
+            f"These dependencies {' '.join([dep[0] for dep in duplicate_deps])} have different versions specified, this may cause issues during installation."
+        )
+
+
+def split_dep_first_version(dep):
+    """
+    Split a dependency string into (package name, first version number only).
+    Strips specifiers like '==', '>=', etc. If no version is found, returns '' for version.
+
+    Returns:
+        (package_name, version)
+    """
+    spec_pattern = r"(==|>=|<=|!=|>|<|=)"
+    match = re.search(spec_pattern, dep)
+
+    if not match:
+        return dep.strip(), ""
+
+    name = dep[: match.start()].strip()
+    version_part = dep[match.start() :].strip()
+    version = re.sub(spec_pattern, "", version_part.split(",")[0]).strip()
+    return name, version
+
+
+def install_models(model_data, cache_dir=None, auth=None):
+    """
+    Install models based on the provided model data.
+    This function should handle the installation logic for each supported framework.
+    """
+    if not model_data:
+        logging.warning("No model data provided for installation.")
+        return
+
+    # for framework, models in model_data.items():
+    #     if framework == "huggingface":
+    #         install_huggingface(models, cache_dir, use_auth=auth)
+    #     elif framework == "torchvision":
+    #         install_torchvision(models, cache_dir)
+    #     elif framework == "sklearn":
+    #         install_sklearn(models, cache_dir)
+    #     else:
+    #         logging.warning(f"Unsupported framework: {framework}")
