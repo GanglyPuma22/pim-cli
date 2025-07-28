@@ -1,5 +1,36 @@
 import logging
+import os
 from pathlib import Path
+from pim.config.config import DEFAULT_CACHE_DIR
+
+
+def setup_logger(debug=False):
+    log_path = DEFAULT_CACHE_DIR / "pim.log"
+
+    os.makedirs(os.path.dirname(log_path), exist_ok=True)
+
+    # Base logger
+    logger = logging.getLogger("pim")
+    logger.setLevel(logging.DEBUG)
+    logger.handlers = []  # Clear existing handlers
+
+    # File handler
+    file_handler = logging.FileHandler(log_path, mode="w")
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(
+        logging.Formatter("[%(levelname)s:%(relpath)s:%(lineno)d] %(message)s")
+    )
+    logger.addHandler(file_handler)
+    logger.addFilter(RelativePathFilter())
+
+    # Optional stdout handler
+    if debug:  # TODO This causes doulbe printing in console when debug mode is on
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.DEBUG)
+        console_handler.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
+        logger.addHandler(console_handler)
+
+    return logger
 
 
 class RelativePathFilter(logging.Filter):

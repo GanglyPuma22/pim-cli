@@ -1,22 +1,18 @@
-import argparse
-import logging
-import os
-from pathlib import Path
-import subprocess
-
-from pim.config.settings import DEFAULT_CONDA_ENV_NAME, DEFAULT_PYTHON_VERSION
+from pim.config.config import DEFAULT_CONDA_ENV_NAME, DEFAULT_PYTHON_VERSION
 from pim.commands.base import BaseCommand
 from pim.utils.conda import (
     conda_env_exists,
     create_conda_env,
     install_dependencies_in_env,
 )
-from pim.commands.utils.install_utils import (
+from pim.commands.utils.parsing import (
     combine_parsed_dicts,
     parse_models_list,
     parse_pimfile,
 )
+from pim.commands.utils.installers import install_models
 from pim.utils.pathing import find_pimfile, validate_cache_path, validate_file_path
+from pim.cli_utils.printing import info, debug, success, warning, handle_cli_error
 
 
 class InstallCommand(BaseCommand):
@@ -76,14 +72,15 @@ class InstallCommand(BaseCommand):
                     if args.file is None
                     else validate_file_path(args.file)
                 )
-                logging.info(
-                    f"Installing models and dependencies from {pimfile_path} and saving to {cache_dir}"
+                info(
+                    f"Installing models and dependencies from {pimfile_path} and saving to {cache_dir}",
+                    style="bold blue",
                 )
                 # TODO Update parser to handle dependencies too and python version
                 model_data_from_pimfile = parse_pimfile(pimfile_path)
 
             if args.models:
-                logging.debug(f"Models requested at CLI: {args.models}")
+                debug(f"Models requested at CLI: {args.models}")
                 model_data_from_user_args = parse_models_list(args.models)
 
             # TODO Document struct more clearly
@@ -94,28 +91,33 @@ class InstallCommand(BaseCommand):
 
             # TODO decide if we want to combine models into one dict -> Initial thought no if dependencies arent provided in cli but can be in Pimfile
             if args.isolated:
-                logging.info("Using new isolated environments for all models provided")
+                info(
+                    "Using new isolated environments for all models provided!",
+                    style="bold yellow",
+                )
                 # TODO Handle isolated environments
             else:
                 base_conda_env_name = DEFAULT_CONDA_ENV_NAME
                 if "env-name" in combined_model_data:
                     base_conda_env_name = combined_model_data["env-name"]
 
-                logging.info(
+                info(
                     f"Using {base_conda_env_name} conda environment for all models provided, this will install all dependencies in the same environment"
                 )
 
                 # Check if base conda env doesnt already exist
                 if conda_env_exists(base_conda_env_name):
-                    logging.warning(
-                        "Provided conda environment already exists, skipping creation."
+                    warning(
+                        f"{base_conda_env_name} conda environment already exists, skipping creation."
                     )
                 else:
-                    logging.info(
-                        f"Creating new conda environment: {base_conda_env_name} with Python {DEFAULT_PYTHON_VERSION}"
+                    info(
+                        f"Creating new conda environment: {base_conda_env_name} with Python {DEFAULT_PYTHON_VERSION}",
+                        style="bold blue",
                     )
                     # Create the base conda environment
                     create_conda_env(base_conda_env_name)
+                    success(f"Conda environment created: {base_conda_env_name}")
 
                 install_dependencies_in_env(
                     base_conda_env_name,
@@ -123,7 +125,7 @@ class InstallCommand(BaseCommand):
                     combined_model_data.get("pip-dependencies", None),
                 )
 
-                # install_models(combined_model_data, cache_dir, args.auth)
+                install_models(combined_model_data, cache_dir, args.auth)
                 # for framework, model_data in combined_model_data.items():
 
             # # Install models and dependencies
@@ -137,8 +139,7 @@ class InstallCommand(BaseCommand):
             #             # Pass the project root to resolve the relative path
             #             install_sklearn(model, cache_dir)
             #         else:
-            #            logging.warning(f"Unsupported framework: {framework}")
+            #            logger.warning(f"Unsupported framework: {framework}")
 
         except Exception as e:
-            logging.error(e)
-            raise e
+            handle_cli_error(e)

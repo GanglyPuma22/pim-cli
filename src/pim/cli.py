@@ -6,7 +6,7 @@ from huggingface_hub import snapshot_download
 
 # Import the pimfile parser
 from pim.utils.model_parsing import parse_pimfile
-from pim.utils.logging_filter import RelativePathFilter
+from pim.utils.logging_setup import RelativePathFilter
 
 
 # --- Installation Functions ---

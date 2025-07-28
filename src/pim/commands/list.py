@@ -1,6 +1,6 @@
-import logging
 from pathlib import Path
 from pim.commands.base import BaseCommand
+from pim.cli_utils.printing import handle_cli_error
 
 
 class ListCommand(BaseCommand):
@@ -21,5 +21,4 @@ class ListCommand(BaseCommand):
             # ...existing list logic...
             return 0
         except Exception as e:
-            logging.error(e)
-            return 1
+            handle_cli_error(e)

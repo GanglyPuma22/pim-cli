@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from pim.config.settings import DEFAULT_CACHE_DIR
+from pim.config.config import DEFAULT_CACHE_DIR
 
 
 # TODO Use conf variable for default cache path
