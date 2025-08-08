@@ -28,14 +28,16 @@ def combine_parsed_dicts(dict1, dict2):
 
     combined = initialize_parsed_dict()
     for framework in SUPPORTED_FRAMEWORKS:
-        combined[framework] = dict1.get(framework, []) + dict2.get(framework, [])
+        combined[framework] = list(
+            dict.fromkeys(dict1.get(framework, []) + dict2.get(framework, []))
+        )
 
     # Carry over any additional keys
-    for dict in [dict1, dict2]:
-        for key in dict.keys():
+    for dictionary in [dict1, dict2]:
+        for key in dictionary.keys():
             # Be careful, this assumes both dicts do not have conflicting keys outside of the supported frameworks
             if key not in combined:
-                combined[key] = dict[key]
+                combined[key] = dictionary[key]
 
     return combined
 
@@ -71,20 +73,24 @@ def parse_pimfile(pimfile_path):
                     continue
 
                 for model in model_data:
-                    # Save model name to parsed dict to install at once
-                    parsed[framework].append(model["name"])
+                    # Check if we have a simple pimfile with no dependencies:
+                    if not all(isinstance(item, (dict)) for item in model_data):
+                        parsed[framework].append(model)
+                    else:
+                        # Save model name to parsed dict to install at once
+                        parsed[framework].append(model["name"])
 
-                    # TODO Handle case where no deps (Not required in pimfile)
-                    if "dependencies" in model:
-                        # Gather dependencies into conda and pip lists
-                        for dep in model["dependencies"]:
-                            # Currently we only support conda and pip dependencies, so if its a dict it has to be pip
-                            if isinstance(dep, dict):
-                                # Handle pip dependencies
-                                if "pip" in dep:
-                                    pip_dependencies.extend(dep["pip"])
-                            else:
-                                conda_depencies.append(dep)
+                        # TODO Handle case where no deps (Not required in pimfile)
+                        if "dependencies" in model:
+                            # Gather dependencies into conda and pip lists
+                            for dep in model["dependencies"]:
+                                # Currently we only support conda and pip dependencies, so if its a dict it has to be pip
+                                if isinstance(dep, dict):
+                                    # Handle pip dependencies
+                                    if "pip" in dep:
+                                        pip_dependencies.extend(dep["pip"])
+                                else:
+                                    conda_depencies.append(dep)
 
             parsed["conda-dependencies"] = conda_depencies
             parsed["pip-dependencies"] = pip_dependencies
@@ -93,8 +99,10 @@ def parse_pimfile(pimfile_path):
                 parsed["conda-dependencies"], parsed["pip-dependencies"]
             )
             return parsed
+    except (ValueError, FileNotFoundError) as e:
+        raise e from e
     except Exception as e:
-        raise ValueError(f"Error parsing Pimfile at {pimfile_path}")
+        raise ValueError(f"Error parsing Pimfile at {pimfile_path}") from e
 
 
 def parse_models_list(models_list):

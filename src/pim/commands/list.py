@@ -17,7 +17,7 @@ class ListCommand(BaseCommand):
 
     def run(self, args) -> int:
         try:
-            pimfile_path = Path(args.file)
+            # pimfile_path = Path(args.file)
             # ...existing list logic...
             return 0
         except Exception as e:

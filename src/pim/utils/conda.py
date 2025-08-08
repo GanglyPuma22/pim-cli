@@ -3,8 +3,28 @@ import re
 import subprocess
 import sys
 
-from pim.cli_utils.printing import warning
+from pim.cli_utils.printing import debug, info, warning, success
 from pim.config.config import DEFAULT_PYTHON_VERSION
+
+
+def handle_conda_env_and_dependencies(env_name, conda_deps, pip_deps):
+    # Check if base conda env doesnt already exist
+    if conda_env_exists(env_name):
+        debug(f"{env_name} conda environment already exists, skipping creation.")
+    else:
+        info(
+            f"Creating new conda environment: {env_name} with Python {DEFAULT_PYTHON_VERSION}",
+            style="bold blue",
+        )
+        # Create the base conda environment
+        create_conda_env(env_name)
+        success(f"Conda environment created: {env_name}")
+
+    install_dependencies_in_env(
+        env_name,
+        conda_deps,
+        pip_deps,
+    )
 
 
 def conda_env_exists(env_name):
@@ -19,6 +39,11 @@ def install_dependencies_in_env(env_name, conda_deps, pip_deps):
     """
     Install conda and pip dependencies in the specified conda environment.
     """
+    if conda_deps or pip_deps:
+        info(
+            f"Installing dependencies in conda environment: {env_name}",
+            style="bold blue",
+        )
     if conda_deps:
         subprocess.run(
             ["conda", "run", "-n", env_name, "conda", "install", "-y"] + conda_deps,
@@ -36,7 +61,7 @@ def install_dependencies_in_env(env_name, conda_deps, pip_deps):
         )
 
 
-def create_conda_env(base_conda_env_name):
+def create_conda_env(env_name):
     """
     Create a new conda environment with the specified name and Python version.
     """
@@ -45,7 +70,7 @@ def create_conda_env(base_conda_env_name):
             "conda",
             "create",
             "-n",
-            base_conda_env_name,
+            env_name,
             f"python={DEFAULT_PYTHON_VERSION}",
             "-y",
             "-q",

@@ -3,6 +3,7 @@ from pim.commands.base import BaseCommand
 from pim.utils.conda import (
     conda_env_exists,
     create_conda_env,
+    handle_conda_env_and_dependencies,
     install_dependencies_in_env,
 )
 from pim.commands.utils.parsing import (
@@ -73,7 +74,7 @@ class InstallCommand(BaseCommand):
                     else validate_file_path(args.file)
                 )
                 info(
-                    f"Installing models and dependencies from {pimfile_path} and saving to {cache_dir}",
+                    f"Installing models from {pimfile_path} and saving to {cache_dir}",
                     style="bold blue",
                 )
                 # TODO Update parser to handle dependencies too and python version
@@ -97,49 +98,13 @@ class InstallCommand(BaseCommand):
                 )
                 # TODO Handle isolated environments
             else:
-                base_conda_env_name = DEFAULT_CONDA_ENV_NAME
-                if "env-name" in combined_model_data:
-                    base_conda_env_name = combined_model_data["env-name"]
-
-                info(
-                    f"Using {base_conda_env_name} conda environment for all models provided, this will install all dependencies in the same environment"
-                )
-
-                # Check if base conda env doesnt already exist
-                if conda_env_exists(base_conda_env_name):
-                    warning(
-                        f"{base_conda_env_name} conda environment already exists, skipping creation."
-                    )
-                else:
-                    info(
-                        f"Creating new conda environment: {base_conda_env_name} with Python {DEFAULT_PYTHON_VERSION}",
-                        style="bold blue",
-                    )
-                    # Create the base conda environment
-                    create_conda_env(base_conda_env_name)
-                    success(f"Conda environment created: {base_conda_env_name}")
-
-                install_dependencies_in_env(
-                    base_conda_env_name,
+                handle_conda_env_and_dependencies(
+                    combined_model_data.get("env-name", DEFAULT_CONDA_ENV_NAME),
                     combined_model_data.get("conda-dependencies", None),
                     combined_model_data.get("pip-dependencies", None),
                 )
 
                 install_models(combined_model_data, cache_dir, args.auth)
-                # for framework, model_data in combined_model_data.items():
-
-            # # Install models and dependencies
-            # for framework, models in model_data_from_pimfile.items():
-            #     for model in models:
-            #         if framework == "huggingface":
-            #             install_huggingface(model, cache_dir, use_auth=args.auth)
-            #         elif framework == "torchvision":
-            #             install_torchvision(model, cache_dir)
-            #         elif framework == "sklearn":
-            #             # Pass the project root to resolve the relative path
-            #             install_sklearn(model, cache_dir)
-            #         else:
-            #            logger.warning(f"Unsupported framework: {framework}")
 
         except Exception as e:
             handle_cli_error(e)
